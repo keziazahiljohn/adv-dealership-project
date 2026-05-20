@@ -26,6 +26,7 @@ public class UserInterface {
             System.out.println("7. Get all vehicles");
             System.out.println("8. Add vehicle");
             System.out.println("9. Remove vehicle");
+            System.out.println("10. Sell/Lease Vehicle");
             System.out.println("99. Quit");
 
             System.out.print("Enter your choice: ");
@@ -58,6 +59,9 @@ public class UserInterface {
                     break;
                 case "9":
                     processRemoveVehicleRequest();
+                    break;
+                case "10":
+                    processContractRequest();
                     break;
                 case "99":
                     quit = true;
@@ -181,6 +185,73 @@ public class UserInterface {
 
         DealershipFileManager manager = new DealershipFileManager();
         manager.saveDealership(dealership);
+    }
+
+    public void processContractRequest() {
+
+        System.out.print("Enter VIN of vehicle: ");
+        int vin = scanner.nextInt();
+        scanner.nextLine();
+
+        Vehicle selectedVehicle = null;
+
+        for (Vehicle vehicle : dealership.getAllVehicles()) {
+            if (vehicle.getVin() == vin) {
+                selectedVehicle = vehicle;
+                break;
+            }
+        }
+
+        if (selectedVehicle == null) {
+            System.out.println("Vehicle not found :(");
+            return;
+        }
+
+        System.out.print("Enter customer name: ");
+        String name = scanner.nextLine();
+
+        System.out.print("Enter customer email: ");
+        String email = scanner.nextLine();
+
+        System.out.print("Enter contract date: ");
+        String date = scanner.nextLine();
+
+        System.out.println("1. Sales Contract");
+        System.out.println("2. Lease Contract");
+
+        String choice = scanner.nextLine();
+
+        ContractFileManager manager = new ContractFileManager();
+
+        if (choice.equals("1")) {
+
+            System.out.print("Finance the vehicle? (yes/no): ");
+            String financeChoice = scanner.nextLine();
+
+            boolean financed = financeChoice.equalsIgnoreCase("yes");
+
+            SalesContract contract = new SalesContract( date, name, email, selectedVehicle, financed);
+
+            manager.saveContract(contract);
+
+            dealership.removeVehicle(selectedVehicle);
+;
+            System.out.println("Sales contract saved!");
+
+        } else if (choice.equals("2")) {
+            double expectedEndingValue = selectedVehicle.getPrice() * 0.50;
+            double leaseFee = selectedVehicle.getPrice() * 0.07;
+            LeaseContract contract = new LeaseContract (date, name, email, selectedVehicle, expectedEndingValue, leaseFee);
+
+            manager.saveContract(contract);
+
+            dealership.removeVehicle(selectedVehicle);
+
+            System.out.println("Lease contract saved!");
+        }
+
+        DealershipFileManager dealershipManager = new DealershipFileManager();
+        dealershipManager.saveDealership(dealership);
     }
 
     private void init() {
